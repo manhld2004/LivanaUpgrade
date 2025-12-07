@@ -3,9 +3,6 @@ package com.example.myapplication.data.Repository.Property;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,15 +10,12 @@ import androidx.annotation.Nullable;
 
 import com.example.myapplication.data.Enum.PropertyStatus;
 
-import com.example.myapplication.data.Model.Property.DateDeserializer;
 import com.example.myapplication.data.Model.Property.Property;
 import com.example.myapplication.data.Model.Property.SearchProperty;
 import com.example.myapplication.data.Model.Search.BookedDateRequest;
 import com.example.myapplication.data.Model.Search.SearchResponse;
 import com.example.myapplication.data.Repository.FirebaseService;
 import com.example.myapplication.data.Repository.Search.PropertyAPIClient;
-import com.example.myapplication.data.Repository.Services.PropertyApiService;
-import com.example.myapplication.data.Repository.Services.RetrofitClient;
 import com.example.myapplication.data.Repository.Storage.StorageRepository;
 import com.example.myapplication.ui.fragments.LinkValidator;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -34,8 +28,6 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import com.google.firebase.firestore.Transaction;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -56,33 +48,15 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-
 public class PropertyRepository {
     private final FirebaseFirestore db;
     private final StorageRepository storageRepository;
     private final String COLLECTION_NAME = "properties"; // Tên collection trong Firestore
-
-    private final PropertyApiService apiService;
-
     private final PropertyAPIClient propertyAPIClient;
-
     public PropertyRepository(Context context) {
         this.db = FirebaseService.getInstance(context).getFireStore();
         this.propertyAPIClient = new PropertyAPIClient();
         this.storageRepository = new StorageRepository(context);
-        this.apiService = RetrofitClient.getClient().create(PropertyApiService.class);
-    }
-
-    public PropertyRepository() {
-        this.db = null;
-        this.storageRepository = null;
-        this.propertyAPIClient = null;
-        this.apiService = RetrofitClient.getClient().create(PropertyApiService.class);
     }
 
     public void addProperty(Property property, Uri main_image ,List<Uri> sub_images , OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
@@ -284,77 +258,37 @@ public class PropertyRepository {
                 .addOnFailureListener(onFailure);
     }
 
-//    public void getAllProperties(OnSuccessListener<List<Property>> onSuccess, OnFailureListener onFailure) {
-//        db.collection(COLLECTION_NAME)
-//                .get()
-//                .addOnSuccessListener(queryDocumentSnapshots -> {
-//                    List<Property> propertyList = new ArrayList<>();
-//                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-//                        Property property = document.toObject(Property.class);
-//                        propertyList.add(property);
-//                    }
-//                    List<String> targetIDs = Arrays.asList(
-//                            "4d36355e-5613-4154-8b19-dacf94faec04",
-//                            "5d3c3511-09a4-4604-9391-50b1092e8e44",
-//                            "7a850e26-fb7f-484d-b908-acdd6370f240",
-//                            "9a6779e1-4ffb-494e-961e-eb1809d45651",
-//                            "a158940d-0f68-4e16-adba-a5896ab2e21f"
-//                    );
-//                    List<Property> prioritized = new ArrayList<>();
-//                    List<Property> remaining = new ArrayList<>();
-//
-//                    for (Property property : propertyList) {
-//                        if (targetIDs.contains(property.id)) {
-//                            prioritized.add(property);
-//                        } else {
-//                            remaining.add(property);
-//                        }
-//                    }
-//                    prioritized.addAll(remaining);
-//                    onSuccess.onSuccess(prioritized);
-//                })
-//                .addOnFailureListener(onFailure);
-//    }
+    public void getAllProperties(OnSuccessListener<List<Property>> onSuccess, OnFailureListener onFailure) {
+        db.collection(COLLECTION_NAME)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Property> propertyList = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Property property = document.toObject(Property.class);
+                        propertyList.add(property);
+                    }
+                    List<String> targetIDs = Arrays.asList(
+                            "4d36355e-5613-4154-8b19-dacf94faec04",
+                            "5d3c3511-09a4-4604-9391-50b1092e8e44",
+                            "7a850e26-fb7f-484d-b908-acdd6370f240",
+                            "9a6779e1-4ffb-494e-961e-eb1809d45651",
+                            "a158940d-0f68-4e16-adba-a5896ab2e21f"
+                    );
+                    List<Property> prioritized = new ArrayList<>();
+                    List<Property> remaining = new ArrayList<>();
 
-                            public void getAllProperties(OnSuccessListener<List<Property>> onSuccess, OnFailureListener onFailure) {
-                                apiService.getAllProperties().enqueue(new Callback<List<Property>>() {
-                                    @Override
-                                    public void onResponse(Call<List<Property>> call, Response<List<Property>> response) {
-                                        if (!response.isSuccessful() || response.body() == null) {
-                                            onFailure.onFailure(new Exception("Failed to fetch properties"));
-                                            return;
-                                        }
-
-                                        List<Property> propertyList = response.body();
-
-                                        // Giữ logic sắp xếp như cũ
-                                        List<String> targetIDs = Arrays.asList(
-                                                "4d36355e-5613-4154-8b19-dacf94faec04",
-                                                "5d3c3511-09a4-4604-9391-50b1092e8e44",
-                                                "7a850e26-fb7f-484d-b908-acdd6370f240",
-                                                "9a6779e1-4ffb-494e-961e-eb1809d45651",
-                                                "a158940d-0f68-4e16-adba-a5896ab2e21f"
-                                        );
-
-                                        List<Property> prioritized = new ArrayList<>();
-                                        List<Property> remaining = new ArrayList<>();
-
-                                        for (Property property : propertyList) {
-                                            if (targetIDs.contains(property.id)) prioritized.add(property);
-                                            else remaining.add(property);
-                                        }
-                                        prioritized.addAll(remaining);
-
-                                        new Handler(Looper.getMainLooper()).post(() -> onSuccess.onSuccess(prioritized));
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<List<Property>> call, Throwable t) {
-                                        Log.e("PropertyRepo", "Retrofit request failed", t);
-                                        new Handler(Looper.getMainLooper()).post(() -> onFailure.onFailure(new Exception(t)));
-                                    }
-                                });
-                            }
+                    for (Property property : propertyList) {
+                        if (targetIDs.contains(property.id)) {
+                            prioritized.add(property);
+                        } else {
+                            remaining.add(property);
+                        }
+                    }
+                    prioritized.addAll(remaining);
+                    onSuccess.onSuccess(prioritized);
+                })
+                .addOnFailureListener(onFailure);
+    }
 
     public void getPropertyById(String id, OnSuccessListener<Property> onSuccess, OnFailureListener onFailure) {
         db.collection(COLLECTION_NAME)

@@ -40,7 +40,6 @@ public class LoginActivity extends AppCompatActivity {
     private UserRepository userRepository;
     private AuthRepository authRepository;
     private NotificationRepository notificationRepository;
-    private static final int RC_GOOGLE_SIGN_IN = 1001;
     private GoogleSignInClient googleSignInClient;
     private SignInButton btnGoogleSignIn;
     private ActivityResultLauncher<Intent> googleSignInLauncher;
@@ -115,27 +114,7 @@ public class LoginActivity extends AppCompatActivity {
         googleSignInLauncher.launch(googleSignInClient.getSignInIntent());
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_GOOGLE_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                GoogleSignInAccount account = task.getResult(ApiException.class);
-                if (account != null) {
-                    authRepository.loginWithGoogleAccount(
-                            account,
-                            this::handlePostGoogleSignIn,
-                            error -> Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show()
-                    );
-                }
-            } catch (ApiException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Lỗi đăng nhập: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        }
-    }
+    // --- ĐÃ XÓA onActivityResult vì đã có googleSignInLauncher ---
 
     private void handlePostGoogleSignIn(AuthResult authResult) {
         boolean isNew = authResult.getAdditionalUserInfo().isNewUser();

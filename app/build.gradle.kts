@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services") version "4.4.2" apply false
@@ -70,7 +71,7 @@ dependencies {
     // Thư viện Retrofit
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.3")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.3.2")
 
     // Thêm Gson để xử lý JSON
     implementation ("com.google.code.gson:gson:2.9.0")
@@ -92,6 +93,8 @@ dependencies {
     // chart
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
+    // EncryptedSharedPreferences
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
 }
 
